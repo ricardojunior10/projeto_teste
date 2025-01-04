@@ -1,8 +1,7 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from scipy.stats import shapiro, levene, mannwhitneyu
-
+from scipy.stats import shapiro, levene, mannwhitneyu, ttest_ind
 
 
 def analise_shapiro(dataframe, alfa=0.05):
@@ -16,8 +15,6 @@ def analise_shapiro(dataframe, alfa=0.05):
             print(f'{coluna} não segue uma distribuição normal (valor p: {valor_p_sw:.3f})')
 
 
-
-
 def analise_levene(dataframe, alfa=0.05, centro='mean'):
     print('Teste de Levene')
     estatistica_levene, valor_p_levene = levene(*[dataframe[coluna] for coluna in dataframe.columns], 
@@ -29,17 +26,17 @@ def analise_levene(dataframe, alfa=0.05, centro='mean'):
     else:
         print(f'Ao menos uma variância é diferente (valor p: {valor_p_levene:.3f})')
 
-
+#------------------------------------------------------------------------------------------------------
 
 def analise_mannwhitneyu(dataframe, 
                          alfa=0.05, 
-                         alternativa='two-side',
+                         alternative='two-sided',
                         ):
     print('Teste de Mann-Whitney')
     estatistica_mw, valor_p_mw = mannwhitneyu(
         *[dataframe[coluna] for coluna in dataframe.columns],
         nan_policy='omit',
-        alternative=alternativa
+        alternative=alternative
     )
 
     print(f'{estatistica_mw:.3f}')
@@ -47,5 +44,38 @@ def analise_mannwhitneyu(dataframe,
         print(f'Não rejeita a hipótese nula (valor p: {valor_p_mw:.3f})')
     else:
         print(f'Rejeita a hipotese nula (valor p: {valor_p_mw:.3f})')
+
+#--------------------------------------------------------------------------------------------------------
+
+def analise_ttest_ind(
+    dataframe,
+    alfa=0.05,
+    variancias_iguais=True,
+    alternative='two-sided',  
+):
+    print('Teste t de Student')
+    estatistica_ttest, valor_p_ttest = ttest_ind(
+        *[dataframe[coluna] for coluna in dataframe.columns],
+        equal_var=variancias_iguais,
+        alternative=alternative,  
+        nan_policy='omit',
+    )
+
+    print(f'{estatistica_ttest=:.3f}')
+    if valor_p_ttest > alfa:
+        print(f'Não rejeita a hipótese nula (valor p: {valor_p_ttest:.3f})')
+    else:
+        print(f'Rejeita a hipótese nula (valor p: {valor_p_ttest:.3f})')
+
+#-----------------------------------------------------------------------------------------------------------
+
+def remove_outliers(dados, largura_bigodes=1.5):
+    q1 = dados.quantile(0.25)
+    q3 = dados.quantile(0.75)
+    iqr = q3 - q1
+    return dados[(dados >= q1 - largura_bigodes * iqr) & (dados <= q3 + largura_bigodes * iqr)]
+
+
+
 
 
